@@ -13,6 +13,8 @@ const PRN  = 0b00000110; // Multiply Register Register
 const PUSH = 0b00001010; // Push Register
 const POP  = 0b00001011; // Pop Register
 const CALL = 0b00001111; // Call Register
+const RET  = 0b00010000; // RET
+const ADD  = 0b00001100; // ADD Register to Register
 
 /**
  * Class for simulating a simple Computer (CPU & memory)
@@ -49,6 +51,8 @@ class CPU {
         bt[PUSH] = this.PUSH;
         bt[POP] = this.POP;
         bt[CALL] = this.CALL;
+        bt[RET] = this.RET;
+        bt[ADD] = this.ADD;
 
         this.branchTable = bt;
     }
@@ -97,6 +101,10 @@ class CPU {
         switch (op) {
             case 'MUL':
                 this.reg[regA] = (valA * valB) & 255;
+                break;
+
+            case 'ADD':
+                this.reg[regA] = (valA + valB) & 255;
                 break;
         }
     }
@@ -214,11 +222,36 @@ class CPU {
         // Jump to the address stored in regA
         this.reg.PC = this.reg[regA];
     }
-
+    
+    /**
+     * RET R
+     */
     RET() {
+        this.reg.PC = this.ram.read(this.reg[7]);
+        this.reg[7]++;
     }
 
+    /**
+     * JMP R
+     */
     JMP() {
+        const regA = this.ram.read(this.reg.PC + 1);
+
+        // Jump to the address stored in regA
+        this.reg.PC = this.reg[regA];
+    }
+
+    /**
+     * MUL R,R
+     */
+    ADD() {
+        const regA = this.ram.read(this.reg.PC + 1);
+        const regB = this.ram.read(this.reg.PC + 2);
+
+        this.alu('ADD', regA, regB);
+
+        // Move the PC
+        this.reg.PC += 3;
     }
 }
 

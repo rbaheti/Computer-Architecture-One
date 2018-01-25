@@ -15,6 +15,7 @@ const POP  = 0b00001011; // Pop Register
 const CALL = 0b00001111; // Call Register
 const RET  = 0b00010000; // RET
 const ADD  = 0b00001100; // ADD Register to Register
+const JMP  = 0b00010001; // JMP R R
 
 /**
  * Class for simulating a simple Computer (CPU & memory)
@@ -53,6 +54,7 @@ class CPU {
         bt[CALL] = this.CALL;
         bt[RET] = this.RET;
         bt[ADD] = this.ADD;
+        bt[JMP] = this.JMP;
 
         this.branchTable = bt;
     }
@@ -80,6 +82,10 @@ class CPU {
         this.clock = setInterval(() => {
             _this.tick();
         }, 1);
+
+        this.timeHandler = setIntervel(() => {
+            // Trigger time interrupt
+        }, 1000);
     }
 
     /**
@@ -113,6 +119,22 @@ class CPU {
      * Advances the CPU one cycle
      */
     tick() {
+        // Interrupt stuff
+
+        // Check if an interrupt happened
+        // if it did, jump to interrupt handler
+        const maskedInterrupts = this.reg[IS] & this.reg[IM];
+
+        if (maskedInterrupts !== 0) {
+            for (let i = 0; i <= 7; i++) {
+                if (((maskedInterrupts >> i) & 1) === 1) {
+                    console.log('interrupt! ' + i);
+                }
+            }
+            this.reg[IS] = 0;
+        }
+
+
         // Load the instruction register from the memory address pointed to by
         // the PC
         this.reg.IR = this.ram.read(this.reg.PC);
